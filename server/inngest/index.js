@@ -38,7 +38,7 @@ const syncUserUpdation = inngest.createFunction(
     async ({event})=>{
         const {id, first_name, last_name, email_addresses, image_url } = event.data
         
-        const updatedUserdata = {
+        const updatedUserData = {
             email: email_addresses[0].email_address,
             full_name: first_name + '  ' + last_name,
             profile_picture: image_url
@@ -59,7 +59,7 @@ const syncUserDeletion = inngest.createFunction(
 )
 
 //Create an empty array where we'll export  future Inngest functions
-export const functions = [
+export const functionna = [
     syncUserCreation,
     syncUserUpdation,
     syncUserDeletion
