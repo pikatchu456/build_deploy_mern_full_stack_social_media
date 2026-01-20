@@ -10,7 +10,7 @@ import Profile from './pages/Profile'
 import CreatePost from './pages/CreatePost'
 import {useAuth, useUser} from '@clerk/clerk-react'
 import Layout from './pages/Layout'
-import toast, {Toaster} from 'react-hot-toast'
+import {Toaster} from 'react-hot-toast'
 import { useEffect } from 'react'
 import {useDispatch} from 'react-redux'
 import { fetchUser } from './features/user/userSlice.js'
@@ -18,68 +18,71 @@ import { useSelector } from 'react-redux'
 import { fetchConnections } from './features/connections/connectionSlice.js'
 import { useRef } from 'react'
 import { UserLock } from 'lucide-react'
-import { addMessage } from './features/messages/messagesSlice.js'
 import Notification from './components/Notification.jsx'
+import { useState } from 'react'
+import ErrorBoundary from './components/ErrorBoundary.jsx'
+import { addMessage } from './features/messages/messagesSlice.js'
+
 
 function App() {
-  const {user} = useUser()
-  const {getToken} = useAuth()
-  const {pathname} = useLocation()
-  const pathnameRef = useRef(pathname)
+    const { isLoaded, isSignedIn, user } = useUser();
+    const { getToken } = useAuth();
+    const { pathname } = useLocation();
+    const pathnameRef = useRef(pathname);
+    const dispatch = useDispatch();
+    const [loading, setLoading] = useState(true);
 
-  const dispatch = useDispatch()
+    useEffect(() => {
+        const fetchData = async () => {
+            if (isLoaded && isSignedIn && user) {
+                try {
+                    console.log('Clerk user:', user);
+                    const token = await getToken();
+                    console.log('Clerk token:', token);
+                    
+                    if (token) {
+                        await dispatch(fetchUser(token)).unwrap();
+                        await dispatch(fetchConnections(token)).unwrap();
+                    }
+                } catch (error) {
+                    console.error('Error fetching data:', error);
+                } finally {
+                    setLoading(false);
+                }
+            } else if (isLoaded && !isSignedIn) {
+                setLoading(false);
+            }
+        };
+        
+        fetchData();
+    }, [isLoaded, isSignedIn, user, getToken, dispatch]);
 
-  useEffect(()=>{
-    const fetchData = async () => {
-       if(user) {
-          const token = await getToken()
-          dispatch(fetchUser(token))
-          dispatch(fetchConnections(token))
-      }
+
+    if (loading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+            </div>
+        );
     }
-    fetchData()
-
-  },[user, getToken, dispatch])
-
-  useEffect(()=>{
-    pathnameRef.current = pathname
-  },[pathname])
-
-  useEffect(()=> {
-    if(user){
-      const eventSource = new EventSource(import.meta.env.VITE_BASEURL + '/api/message/' + user.id);
-      eventSource.onmessage = (event)=> {
-          const message = JSON.parse(event.data)
-
-          if(pathnameRef.current === ('/messages/' + message.from_user_id._id)){
-              dispatch(addMessage(message))
-          }else{
-              toast.custom((t)=>(
-                  <Notification t={t} message={message} />
-              ), {position: "bottom-right"})
-          }
-      }
-      return ()=>{
-        eventSource.close()
-      }
-    }
-  }, [user, dispatch])
 
   return (
-    <>
-      <Toaster />
-      <Routes>
-        <Route path='/' element={ !user ? <Login /> : <Layout />}>
-          <Route index element={<Feed />}/>
-          <Route path='messages' element={<Messages />}/>
-          <Route path='messages/:userId' element={<ChatBox />}/>
-          <Route path='connections' element={<Connections />}/>
-          <Route path='discover' element={<Discover />}/>
-          <Route path='profile' element={<Profile />}/>
-          <Route path='profile/:profileId' element={<Profile />}/>
-          <Route path='create-post' element={<CreatePost />}/>
-        </Route>
-      </Routes>
+        <>
+            <Toaster />
+            <ErrorBoundary>
+            <Routes>
+                <Route path='/' element={!isSignedIn ? <Login /> : <Layout />}>
+                  <Route index element={<Feed />}/>
+                  <Route path='messages' element={<Messages />}/>
+                  <Route path='messages/:userId' element={<ChatBox />}/>
+                  <Route path='connections' element={<Connections />}/>
+                  <Route path='discover' element={<Discover />}/>
+                  <Route path='profile' element={<Profile />}/>
+                  <Route path='profile/:profileId' element={<Profile />}/>
+                  <Route path='create-post' element={<CreatePost />}/>
+                </Route>
+            </Routes>
+            </ErrorBoundary>
     </>
   )
 }

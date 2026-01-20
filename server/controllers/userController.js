@@ -6,18 +6,37 @@ import Connection from "../models/Connections.js"
 import Post from "../models/Post.js"
 import { inngest } from "../inngest/index.js"
 
-//Get User Data using userId
+// controllers/userController.js
 export const getUserData = async (req, res) => {
     try {
-        const {userId} = req.auth()
-        const user = await User.findById(userId)
-        if(!user) {
-            return res.json({success: false, message: "User not found"})
+        console.log('getUserData called');
+        
+        const { userId } = req.auth();
+        console.log('User ID from auth:', userId);
+        
+        let user = await User.findById(userId);
+        
+        if (!user) {
+            console.log('User not found, creating default user...');
+            // Créer un utilisateur avec des données par défaut
+            const emailAddresses = req.auth?.sessionClaims?.email_addresses || [];
+            const email = emailAddresses.length > 0 ? emailAddresses[0] : `${userId}@example.com`;
+            
+            user = await User.create({
+                _id: userId,
+                email: email,
+                username: `user_${Date.now()}`,
+                full_name: 'Nouvel Utilisateur',
+                profile_picture: '',
+                created_at: new Date()
+            });
+            console.log('Default user created:', user);
         }
-        res.json({success: true, user})
+        
+        res.json({ success: true, user });
     } catch (error) {
-        console.log(error);
-        res.json({success: false, message: error.message})
+        console.error('Error in getUserData:', error);
+        res.status(500).json({ success: false, message: error.message });
     }
 }
 
