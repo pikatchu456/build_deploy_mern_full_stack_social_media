@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react'
-import { dummyRecentMessagesData } from '../assets/assets'
 import { Link } from 'react-router-dom'
 import { MessageSquareLock } from 'lucide-react'
 import moment from 'moment'
