@@ -8,49 +8,38 @@ const initialState = {
     error: null
 }
 
-export const fetchUser = createAsyncThunk('user/fetchUser', async (token, {rejectWithValue}) => {
+export const fetchUser = createAsyncThunk('users/fetchUser', async (token, { rejectWithValue }) => {
     try {
-        console.log('fetchUser called with token:', token ? 'Yes' : 'No')
-        
-        const {data} = await api.get('/api/user/data', {
-            headers: {Authorization: `Bearer ${token}`}
-        })
-        
-        console.log('Backend response:', data)
+        console.log('Fetching user data with token');
+        const { data } = await api.get('/api/users/data', {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        console.log('Response from /api/users/data:', data);
         
         if (data.success) {
-            console.log('User data fetched successfully:', data.user)
-            return data.user
+            console.log('User data fetched successfully:', data.user);
+            return data.user;
         } else {
-            console.error('Backend returned success: false', data.message)
-            toast.error(data.message || 'Failed to fetch user data')
-            return rejectWithValue(data.message)
+            console.log('Failed to fetch user data:', data.message);
+            return null;
         }
     } catch (error) {
-        console.error('Error in fetchUser:', error)
-        console.error('Error response:', error.response?.data)
-        toast.error(error.response?.data?.message || 'Failed to fetch user data')
-        return rejectWithValue(error.response?.data?.message || error.message)
+        console.error('Error fetching user data:', error);
+        console.error('Error response:', error.response?.data);
+        return rejectWithValue(error.response?.data || error.message);
     }
-})
+});
 
-export const updateUser = createAsyncThunk('user/update', async ({userData, token}, {rejectWithValue}) => {
-    try {
-        const {data} = await api.post('/api/user/update', userData, {
-            headers: {Authorization: `Bearer ${token}`}
-        })
-        
-        if(data.success){
-            toast.success(data.message)
-            return data.user
-        }else{
-            toast.error(data.message)
-            return rejectWithValue(data.message)
-        }
-    } catch (error) {
-        console.error('Error updating user:', error)
-        toast.error(error.response?.data?.message || 'Failed to update user')
-        return rejectWithValue(error.response?.data?.message || error.message)
+export const updateUser = createAsyncThunk('users/update', async ({userData, token}) => {
+    const {data} = await api.post('/api/users/update ', userData, {
+        headers: {Authorization: `Bearer ${token}`}
+    })
+    if(data.success){
+        toast.success(data.message)
+        return data.user
+    }else{
+        toast.error(data.message)
+        return null
     }
 })
 

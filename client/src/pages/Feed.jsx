@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react'
 import Loading from '../components/Loading'
-import { assets, dummyPostsData } from '../assets/assets'
+import { assets } from '../assets/assets'
 import StoriesBar from '../components/StoriesBar'
 import PostCard from '../components/PostCard'
 import RecentMessages from '../components/RecentMessages'
 import { useAuth } from '@clerk/clerk-react'
 import api from '../api/axios'
-import { toast } from 'react-hot-toast'
+import toast from 'react-hot-toast'
 import { DatabaseBackup } from 'lucide-react'
 
 const Feed = () => {
